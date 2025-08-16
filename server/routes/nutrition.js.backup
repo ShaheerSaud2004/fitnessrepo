@@ -1,0 +1,457 @@
+const express = require('express');
+const router = express.Router();
+
+// Create nutrition entry
+router.post('/', (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { date, meals, totalCalories, totalProtein, totalCarbs, totalFat, totalFiber, waterIntake, notes } = req.body;
+
+        // Validation
+        if (!meals || !Array.isArray(meals) || meals.length === 0) {
+            return res.status(400).json({ 
+                error: 'At least one meal is required',
+                details: 'Nutrition entry must contain at least one meal'
+            });
+        }
+
+        // Calculate totals if not provided
+        let calculatedCalories = totalCalories || 0;
+        let calculatedProtein = totalProtein || 0;
+        let calculatedCarbs = totalCarbs || 0;
+        let calculatedFat = totalFat || 0;
+        let calculatedFiber = totalFiber || 0;
+
+        if (!totalCalories || !totalProtein || !totalCarbs || !totalFat) {
+            meals.forEach(meal => {
+                if (meal.foods && Array.isArray(meal.foods)) {
+                    meal.foods.forEach(food => {
+                        calculatedCalories += food.calories || 0;
+                        calculatedProtein += food.protein || 0;
+                        calculatedCarbs += food.carbs || 0;
+                        calculatedFat += food.fat || 0;
+                        calculatedFiber += food.fiber || 0;
+                    });
+                }
+            });
+        }
+
+        const nutritionEntry = {
+            id: Date.now().toString(),
+            userId,
+            date: date || new Date().toISOString().split('T')[0],
+            meals,
+            totalCalories: calculatedCalories,
+            totalProtein: calculatedProtein,
+            totalCarbs: calculatedCarbs,
+            totalFat: calculatedFat,
+            totalFiber: calculatedFiber,
+            waterIntake: waterIntake || 0,
+            notes: notes || '',
+            createdAt: new Date().toISOString()
+        };
+
+        // Get or create user data
+        let userData = req.userData.get(userId);
+        if (!userData) {
+            userData = {
+                profile: {},
+                workouts: [],
+                nutrition: [],
+                hydration: [],
+                painFatigue: [],
+                scheduling: [],
+                habits: [],
+                settings: {
+                    darkMode: false,
+                    units: 'metric',
+                    notifications: true
+                }
+            };
+        }
+
+        userData.nutrition.push(nutritionEntry);
+        req.userData.set(userId, userData);
+
+        res.status(201).json({
+            message: 'Nutrition entry created successfully',
+            entry: nutritionEntry
+        });
+
+    } catch (error) {
+        console.error('Create nutrition entry error:', error);
+        res.status(500).json({ 
+            error: 'Failed to create nutrition entry',
+            details: 'An error occurred while creating the nutrition entry'
+        });
+    }
+});
+
+// Get all nutrition entries
+router.get('/', (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { startDate, endDate, minCalories, maxCalories } = req.query;
+
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.nutrition) {
+            return res.json({ entries: [] });
+        }
+
+        let entries = [...userData.nutrition];
+
+        // Filter by date range
+        if (startDate && endDate) {
+            entries = entries.filter(entry => 
+                entry.date >= startDate && entry.date <= endDate
+            );
+        }
+
+        // Filter by calorie range
+        if (minCalories || maxCalories) {
+            entries = entries.filter(entry => {
+                const calories = entry.totalCalories || 0;
+                if (minCalories && calories < parseInt(minCalories)) return false;
+                if (maxCalories && calories > parseInt(maxCalories)) return false;
+                return true;
+            });
+        }
+
+        // Sort by date (newest first)
+        entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        res.json({ entries });
+
+    } catch (error) {
+        console.error('Get nutrition entries error:', error);
+        res.status(500).json({ 
+            error: 'Failed to get nutrition entries',
+            details: 'An error occurred while retrieving nutrition entries'
+        });
+    }
+});
+
+// Get nutrition statistics
+router.get('/stats', (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.nutrition || userData.nutrition.length === 0) {
+            return res.json({
+                stats: {
+                    totalEntries: 0,
+                    averageCalories: 0,
+                    averageProtein: 0,
+                    averageCarbs: 0,
+                    averageFat: 0,
+                    totalWaterIntake: 0,
+                    calorieTrend: [],
+                    macroDistribution: {}
+                }
+            });
+        }
+
+        const entries = userData.nutrition;
+        const totalEntries = entries.length;
+        const totalCalories = entries.reduce((sum, entry) => sum + (entry.totalCalories || 0), 0);
+        const totalProtein = entries.reduce((sum, entry) => sum + (entry.totalProtein || 0), 0);
+        const totalCarbs = entries.reduce((sum, entry) => sum + (entry.totalCarbs || 0), 0);
+        const totalFat = entries.reduce((sum, entry) => sum + (entry.totalFat || 0), 0);
+        const totalWaterIntake = entries.reduce((sum, entry) => sum + (entry.waterIntake || 0), 0);
+
+        const stats = {
+            totalEntries,
+            averageCalories: Math.round(totalCalories / totalEntries),
+            averageProtein: Math.round(totalProtein / totalEntries),
+            averageCarbs: Math.round(totalCarbs / totalEntries),
+            averageFat: Math.round(totalFat / totalEntries),
+            totalWaterIntake,
+            calorieTrend: entries.slice(-7).map(entry => ({
+                date: entry.date,
+                calories: entry.totalCalories
+            })),
+            macroDistribution: {
+                protein: Math.round((totalProtein * 4 / totalCalories) * 100) || 0,
+                carbs: Math.round((totalCarbs * 4 / totalCalories) * 100) || 0,
+                fat: Math.round((totalFat * 9 / totalCalories) * 100) || 0
+            }
+        };
+
+        res.json({ stats });
+
+    } catch (error) {
+        console.error('Get nutrition stats error:', error);
+        res.status(500).json({ 
+            error: 'Failed to get nutrition statistics',
+            details: 'An error occurred while retrieving nutrition statistics'
+        });
+    }
+});
+
+// Get specific nutrition entry
+router.get('/:id', (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { id } = req.params;
+
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.nutrition) {
+            return res.status(404).json({ 
+                error: 'Nutrition entry not found',
+                details: 'The requested nutrition entry could not be found'
+            });
+        }
+
+        const entry = userData.nutrition.find(n => n.id === id);
+        if (!entry) {
+            return res.status(404).json({ 
+                error: 'Nutrition entry not found',
+                details: 'The requested nutrition entry could not be found'
+            });
+        }
+
+        res.json({ entry });
+
+    } catch (error) {
+        console.error('Get nutrition entry error:', error);
+        res.status(500).json({ 
+            error: 'Failed to get nutrition entry',
+            details: 'An error occurred while retrieving the nutrition entry'
+        });
+    }
+});
+
+// Update nutrition entry
+router.put('/:id', (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { id } = req.params;
+        const updateData = req.body;
+
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.nutrition) {
+            return res.status(404).json({ 
+                error: 'Nutrition entry not found',
+                details: 'The requested nutrition entry could not be found'
+            });
+        }
+
+        const entryIndex = userData.nutrition.findIndex(n => n.id === id);
+        if (entryIndex === -1) {
+            return res.status(404).json({ 
+                error: 'Nutrition entry not found',
+                details: 'The requested nutrition entry could not be found'
+            });
+        }
+
+        // Update entry
+        userData.nutrition[entryIndex] = {
+            ...userData.nutrition[entryIndex],
+            ...updateData,
+            updatedAt: new Date().toISOString()
+        };
+
+        req.userData.set(userId, userData);
+
+        res.json({
+            message: 'Nutrition entry updated successfully',
+            entry: userData.nutrition[entryIndex]
+        });
+
+    } catch (error) {
+        console.error('Update nutrition entry error:', error);
+        res.status(500).json({ 
+            error: 'Failed to update nutrition entry',
+            details: 'An error occurred while updating the nutrition entry'
+        });
+    }
+});
+    try {
+        const userId = req.user.userId;
+
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.nutrition || userData.nutrition.length === 0) {
+            return res.json({
+                stats: {
+                    totalEntries: 0,
+                    averageCalories: 0,
+                    averageProtein: 0,
+                    averageCarbs: 0,
+                    averageFat: 0,
+                    totalWaterIntake: 0,
+                    calorieTrend: [],
+                    macroDistribution: {}
+                }
+            });
+        }
+
+        const entries = userData.nutrition;
+        const totalEntries = entries.length;
+        const totalCalories = entries.reduce((sum, entry) => sum + (entry.totalCalories || 0), 0);
+        const totalProtein = entries.reduce((sum, entry) => sum + (entry.totalProtein || 0), 0);
+        const totalCarbs = entries.reduce((sum, entry) => sum + (entry.totalCarbs || 0), 0);
+        const totalFat = entries.reduce((sum, entry) => sum + (entry.totalFat || 0), 0);
+        const totalWaterIntake = entries.reduce((sum, entry) => sum + (entry.waterIntake || 0), 0);
+
+        const stats = {
+            totalEntries,
+            averageCalories: Math.round(totalCalories / totalEntries),
+            averageProtein: Math.round(totalProtein / totalEntries),
+            averageCarbs: Math.round(totalCarbs / totalEntries),
+            averageFat: Math.round(totalFat / totalEntries),
+            totalWaterIntake,
+            calorieTrend: entries.slice(-7).map(entry => ({
+                date: entry.date,
+                calories: entry.totalCalories
+            })),
+            macroDistribution: {
+                protein: Math.round((totalProtein * 4 / totalCalories) * 100) || 0,
+                carbs: Math.round((totalCarbs * 4 / totalCalories) * 100) || 0,
+                fat: Math.round((totalFat * 9 / totalCalories) * 100) || 0
+            }
+        };
+
+        res.json({ stats });
+
+    } catch (error) {
+        console.error('Get nutrition stats error:', error);
+        res.status(500).json({ 
+            error: 'Failed to get nutrition statistics',
+            details: 'An error occurred while retrieving nutrition statistics'
+        });
+    }
+});
+
+// Delete nutrition entry
+router.delete('/:id', (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { id } = req.params;
+
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.nutrition) {
+            return res.status(404).json({ 
+                error: 'Nutrition entry not found',
+                details: 'The requested nutrition entry could not be found'
+            });
+        }
+
+        const entryIndex = userData.nutrition.findIndex(n => n.id === id);
+        if (entryIndex === -1) {
+            return res.status(404).json({ 
+                error: 'Nutrition entry not found',
+                details: 'The requested nutrition entry could not be found'
+            });
+        }
+
+        userData.nutrition.splice(entryIndex, 1);
+        req.userData.set(userId, userData);
+
+        res.json({
+            message: 'Nutrition entry deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('Delete nutrition entry error:', error);
+        res.status(500).json({ 
+            error: 'Failed to delete nutrition entry',
+            details: 'An error occurred while deleting the nutrition entry'
+        });
+    }
+});
+
+// Analyze nutrition data
+router.post('/analyze', (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { date, targetCalories, targetProtein, targetCarbs, targetFat } = req.body;
+
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.nutrition) {
+            return res.json({
+                analysis: {
+                    calorieStatus: 'no_data',
+                    macroStatus: 'no_data',
+                    recommendations: ['Start tracking your nutrition to get personalized recommendations'],
+                    score: 0
+                }
+            });
+        }
+
+        const entry = userData.nutrition.find(n => n.date === date);
+        if (!entry) {
+            return res.json({
+                analysis: {
+                    calorieStatus: 'no_data',
+                    macroStatus: 'no_data',
+                    recommendations: ['No nutrition data found for this date'],
+                    score: 0
+                }
+            });
+        }
+
+        // Analyze calories
+        let calorieStatus = 'good';
+        let calorieScore = 100;
+        if (targetCalories) {
+            const calorieDiff = Math.abs(entry.totalCalories - targetCalories);
+            const caloriePercent = (calorieDiff / targetCalories) * 100;
+            
+            if (caloriePercent > 20) {
+                calorieStatus = 'poor';
+                calorieScore = 0;
+            } else if (caloriePercent > 10) {
+                calorieStatus = 'fair';
+                calorieScore = 50;
+            }
+        }
+
+        // Analyze macros
+        let macroStatus = 'good';
+        let macroScore = 100;
+        const recommendations = [];
+
+        if (targetProtein && entry.totalProtein < targetProtein * 0.8) {
+            macroStatus = 'needs_improvement';
+            macroScore = Math.min(macroScore, 70);
+            recommendations.push('Consider increasing protein intake');
+        }
+
+        if (targetCarbs && entry.totalCarbs < targetCarbs * 0.8) {
+            macroStatus = 'needs_improvement';
+            macroScore = Math.min(macroScore, 70);
+            recommendations.push('Consider increasing carbohydrate intake');
+        }
+
+        if (targetFat && entry.totalFat < targetFat * 0.8) {
+            macroStatus = 'needs_improvement';
+            macroScore = Math.min(macroScore, 70);
+            recommendations.push('Consider increasing healthy fat intake');
+        }
+
+        if (recommendations.length === 0) {
+            recommendations.push('Great job! Your nutrition is well balanced');
+        }
+
+        const overallScore = Math.round((calorieScore + macroScore) / 2);
+
+        res.json({
+            analysis: {
+                calorieStatus,
+                macroStatus,
+                recommendations,
+                score: overallScore
+            }
+        });
+
+    } catch (error) {
+        console.error('Analyze nutrition error:', error);
+        res.status(500).json({ 
+            error: 'Failed to analyze nutrition data',
+            details: 'An error occurred while analyzing nutrition data'
+        });
+    }
+});
+
+module.exports = router;

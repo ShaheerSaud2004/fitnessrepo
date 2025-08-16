@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker - Your Personal Health Companion</title>
+    
+    <!-- Google Fonts - Preload for better performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/dark-mode.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <!-- Authentication Section -->
+    <div id="auth-section" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h1><i class="fas fa-dumbbell"></i> Fitness Tracker</h1>
+                <p>Your Personal Health Companion</p>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn-primary">Login</button>
+                <p class="auth-switch">Don't have an account? <a href="#" id="show-register">Register</a></p>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="register-form" class="auth-form hidden">
+                <h2><i class="fas fa-user-plus"></i> Register</h2>
+                <div class="form-group">
+                    <label for="register-name">Full Name</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Confirm Password</label>
+                    <input type="password" id="register-confirm-password" required>
+                </div>
+                <button type="submit" class="btn-primary">Register</button>
+                <p class="auth-switch">Already have an account? <a href="#" id="show-login">Login</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="app-container hidden">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-dumbbell"></i> Fitness Tracker</h2>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-page="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </li>
+                <li class="nav-item" data-page="workout">
+                    <i class="fas fa-dumbbell"></i>
+                    <span>Workout</span>
+                </li>
+                <li class="nav-item" data-page="nutrition">
+                    <i class="fas fa-apple-alt"></i>
+                    <span>Nutrition</span>
+                </li>
+                <li class="nav-item" data-page="hydration">
+                    <i class="fas fa-tint"></i>
+                    <span>Hydration</span>
+                </li>
+                <li class="nav-item" data-page="pain-fatigue">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Pain & Fatigue</span>
+                </li>
+                <li class="nav-item" data-page="scheduling">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Scheduling</span>
+                </li>
+                <li class="nav-item" data-page="habits">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Habits</span>
+                </li>
+                <li class="nav-item" data-page="ai-coach">
+                    <i class="fas fa-robot"></i>
+                    <span>AI Coach</span>
+                </li>
+                <li class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <button id="logout-btn" class="btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div id="dashboard-page" class="page active">
+                <div class="page-header">
+                    <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+                    <p>Track your fitness journey and progress</p>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <!-- Progress Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-area"></i> Workout Progress</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="progress-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-tachometer-alt"></i> Quick Stats</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value" id="total-workouts">0</div>
+                                    <div class="stat-label">Total Workouts</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="total-volume">0</div>
+                                    <div class="stat-label">Total Volume (kg)</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="current-streak">0</div>
+                                    <div class="stat-label">Day Streak</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="avg-energy">0</div>
+                                    <div class="stat-label">Avg Energy</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="recent-activity" class="activity-list">
+                                <p class="empty-state">No recent activity</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Page -->
+            <div id="profile-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-user"></i> Profile</h1>
+                    <p>Manage your personal information and fitness goals</p>
+                </div>
+                
+                <div class="profile-container">
+                    <form id="profile-form" class="profile-form">
+                        <div class="form-section">
+                            <h3><i class="fas fa-user-circle"></i> Personal Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="profile-name">Full Name</label>
+                                    <input type="text" id="profile-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="profile-age">Age</label>
+                                    <input type="number" id="profile-age" min="13" max="120" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="profile-weight">Weight (kg)</label>
+                                    <input type="number" id="profile-weight" step="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="profile-height">Height</label>
+                                    <div class="height-input-group">
+                                        <input type="number" id="profile-height-cm" class="height-input" placeholder="cm" min="100" max="250">
+                                        <span class="height-separator">or</span>
+                                        <div class="height-feet-inches">
+                                            <input type="number" id="profile-height-feet" class="height-input" placeholder="ft" min="3" max="8">
+                                            <span class="height-unit">ft</span>
+                                            <input type="number" id="profile-height-inches" class="height-input" placeholder="in" min="0" max="11">
+                                            <span class="height-unit">in</span>
+                                        </div>
+                                    </div>
+                                    <small class="form-help">Enter height in centimeters or feet and inches</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3><i class="fas fa-bullseye"></i> Fitness Goals</h3>
+                            <div class="form-group">
+                                <label for="profile-goal">Primary Goal</label>
+                                <select id="profile-goal" required>
+                                    <option value="">Select your goal</option>
+                                    <option value="build-muscle">Build Muscle</option>
+                                    <option value="lose-fat">Lose Fat</option>
+                                    <option value="improve-endurance">Improve Endurance</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-experience">Fitness Experience</label>
+                                <select id="profile-experience" required>
+                                    <option value="">Select your experience level</option>
+                                    <option value="beginner">Beginner</option>
+                                    <option value="intermediate">Intermediate</option>
+                                    <option value="advanced">Advanced</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3><i class="fas fa-heartbeat"></i> Medical Information</h3>
+                            <div class="form-group">
+                                <label for="profile-medical">Medical History & Limitations</label>
+                                <textarea id="profile-medical" rows="4" placeholder="Describe any injuries, conditions, or physical limitations..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Save Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Workout Page -->
+            <div id="workout-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-dumbbell"></i> Workout</h1>
+                    <p>Generate workouts and track your training sessions</p>
+                </div>
+                
+                <div class="workout-container">
+                    <!-- Generate Workout Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-magic"></i> Generate AI Workout</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="profile-check" class="profile-check">
+                                <p><i class="fas fa-exclamation-triangle"></i> Please complete your profile first to generate personalized workouts.</p>
+                                <a href="#" class="btn-secondary" data-page="profile">Complete Profile</a>
+                            </div>
+                            <div id="workout-generator" class="workout-generator hidden">
+                                <button id="generate-workout-btn" class="btn-primary">
+                                    <i class="fas fa-magic"></i> Generate New Workout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Workout -->
+                    <div id="current-workout-section" class="card hidden">
+                        <div class="card-header">
+                            <h3><i class="fas fa-play-circle"></i> Current Workout</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="current-workout" class="workout-exercises"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Log Workout Section -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-plus-circle"></i> Log Workout</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="workout-log-form">
+                                <div class="form-group">
+                                    <label for="workout-exercise">Exercise Name</label>
+                                    <input type="text" id="workout-exercise" required>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="workout-sets">Sets</label>
+                                        <input type="number" id="workout-sets" min="1" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="workout-reps">Reps</label>
+                                        <input type="number" id="workout-reps" min="1" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="workout-weight">Weight (kg)</label>
+                                        <input type="number" id="workout-weight" step="0.1" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-plus"></i> Add Exercise
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Workout History -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-history"></i> Workout History</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="workout-history" class="workout-history">
+                                <p class="empty-state">No workout history yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nutrition Page -->
+            <div id="nutrition-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-apple-alt"></i> Nutrition</h1>
+                    <p>Track your daily nutrition and macro intake</p>
+                </div>
+                
+                <div class="nutrition-container">
+                    <!-- Daily Summary -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-pie"></i> Daily Nutrition Summary</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="nutrition-summary">
+                                <div class="macro-chart">
+                                    <canvas id="macro-chart"></canvas>
+                                </div>
+                                <div class="macro-stats">
+                                    <div class="macro-item">
+                                        <span class="macro-label">Calories</span>
+                                        <span class="macro-value" id="total-calories">0</span>
+                                    </div>
+                                    <div class="macro-item">
+                                        <span class="macro-label">Protein</span>
+                                        <span class="macro-value" id="total-protein">0g</span>
+                                    </div>
+                                    <div class="macro-item">
+                                        <span class="macro-label">Carbs</span>
+                                        <span class="macro-value" id="total-carbs">0g</span>
+                                    </div>
+                                    <div class="macro-item">
+                                        <span class="macro-label">Fat</span>
+                                        <span class="macro-value" id="total-fat">0g</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Food -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-plus-circle"></i> Add Food</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="nutrition-form">
+                                <div class="form-group">
+                                    <label for="food-name">Food Name</label>
+                                    <input type="text" id="food-name" required>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="food-calories">Calories</label>
+                                        <input type="number" id="food-calories" min="0" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="food-protein">Protein (g)</label>
+                                        <input type="number" id="food-protein" min="0" step="0.1" required>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="food-carbs">Carbs (g)</label>
+                                        <input type="number" id="food-carbs" min="0" step="0.1" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="food-fat">Fat (g)</label>
+                                        <input type="number" id="food-fat" min="0" step="0.1" required>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-primary">
+                                        <i class="fas fa-plus"></i> Add Food
+                                    </button>
+                                    <button type="button" id="voice-input-btn" class="btn-secondary">
+                                        <i class="fas fa-microphone"></i> Voice Input
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Daily Meals -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-utensils"></i> Today's Meals</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="daily-meals" class="meals-list">
+                                <p class="empty-state">No meals logged today</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hydration Page -->
+            <div id="hydration-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-tint"></i> Hydration</h1>
+                    <p>Track your daily water intake</p>
+                </div>
+                
+                <div class="hydration-container">
+                    <!-- Daily Progress -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-bar"></i> Today's Hydration</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="hydration-progress">
+                                <div class="progress-circle">
+                                    <canvas id="hydration-chart"></canvas>
+                                </div>
+                                <div class="hydration-stats">
+                                    <div class="hydration-amount">
+                                        <span id="current-hydration">0</span> / <span id="target-hydration">2000</span> ml
+                                    </div>
+                                    <div class="hydration-percentage" id="hydration-percentage">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Water -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-plus-circle"></i> Add Water</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="hydration-form">
+                                <div class="form-group">
+                                    <label for="water-amount">Amount (ml)</label>
+                                    <input type="number" id="water-amount" min="50" step="50" value="250" required>
+                                </div>
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-plus"></i> Add Water
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Add Buttons -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bolt"></i> Quick Add</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="quick-add-buttons">
+                                <button class="btn-secondary quick-add" data-amount="250">250ml</button>
+                                <button class="btn-secondary quick-add" data-amount="500">500ml</button>
+                                <button class="btn-secondary quick-add" data-amount="750">750ml</button>
+                                <button class="btn-secondary quick-add" data-amount="1000">1L</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hydration History -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-history"></i> Hydration History</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="hydration-history" class="hydration-history">
+                                <p class="empty-state">No hydration history yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pain & Fatigue Page -->
+            <div id="pain-fatigue-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-heartbeat"></i> Pain & Fatigue</h1>
+                    <p>Monitor your energy levels and track any pain or discomfort</p>
+                </div>
+                
+                <div class="pain-fatigue-container">
+                    <!-- Energy Level -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-battery-half"></i> Energy Level</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="energy-form">
+                                <div class="form-group">
+                                    <label for="energy-level">How's your energy today? (0-10)</label>
+                                    <div class="energy-slider">
+                                        <input type="range" id="energy-level" min="0" max="10" value="5" class="slider">
+                                        <div class="energy-labels">
+                                            <span>0 - Exhausted</span>
+                                            <span id="energy-value">5</span>
+                                            <span>10 - Energized</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-save"></i> Save Energy Level
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Pain Tracking -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Pain Tracking</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="pain-form">
+                                <div class="form-group">
+                                    <label for="pain-location">Pain Location</label>
+                                    <input type="text" id="pain-location" placeholder="e.g., Lower back, right knee...">
+                                </div>
+                                <div class="form-group">
+                                    <label for="pain-intensity">Pain Intensity (1-10)</label>
+                                    <input type="range" id="pain-intensity" min="1" max="10" value="5" class="slider">
+                                    <div class="pain-labels">
+                                        <span>1 - Mild</span>
+                                        <span id="pain-value">5</span>
+                                        <span>10 - Severe</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="pain-notes">Notes</label>
+                                    <textarea id="pain-notes" rows="3" placeholder="Describe the pain, when it started, what makes it worse..."></textarea>
+                                </div>
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-plus"></i> Log Pain
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- History -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-history"></i> History</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="pain-fatigue-history" class="history-list">
+                                <p class="empty-state">No pain or fatigue data logged yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scheduling Page -->
+            <div id="scheduling-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-calendar-alt"></i> Scheduling</h1>
+                    <p>Schedule your workouts, rehab sessions, and other activities</p>
+                </div>
+                
+                <div class="scheduling-container">
+                    <!-- Add Event -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-plus-circle"></i> Schedule Event</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="schedule-form">
+                                <div class="form-group">
+                                    <label for="event-title">Event Title</label>
+                                    <input type="text" id="event-title" required>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="event-date">Date</label>
+                                        <input type="date" id="event-date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="event-time">Time</label>
+                                        <input type="time" id="event-time" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="event-type">Activity Type</label>
+                                    <select id="event-type" required>
+                                        <option value="">Select activity type</option>
+                                        <option value="workout">Workout</option>
+                                        <option value="cardio">Cardio</option>
+                                        <option value="stretching">Stretching</option>
+                                        <option value="rehab">Rehabilitation</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="event-notes">Notes</label>
+                                    <textarea id="event-notes" rows="3" placeholder="Additional details..."></textarea>
+                                </div>
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-plus"></i> Schedule Event
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Scheduled Events -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-calendar-check"></i> Scheduled Events</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="scheduled-events" class="events-list">
+                                <p class="empty-state">No events scheduled</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Habits Page -->
+            <div id="habits-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-check-circle"></i> Habits</h1>
+                    <p>Track your daily fitness habits and build consistency</p>
+                </div>
+                
+                <div class="habits-container">
+                    <!-- Add Habit -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-plus-circle"></i> Add New Habit</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="habit-form">
+                                <div class="form-group">
+                                    <label for="habit-name">Habit Name</label>
+                                    <input type="text" id="habit-name" placeholder="e.g., Morning workout, Drink water..." required>
+                                </div>
+                                <button type="submit" class="btn-primary">
+                                    <i class="fas fa-plus"></i> Add Habit
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Today's Habits -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-calendar-day"></i> Today's Habits</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="today-habits" class="habits-list">
+                                <p class="empty-state">No habits created yet</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Habit History -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-bar"></i> Habit Progress</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="habit-progress" class="habit-progress">
+                                <p class="empty-state">No habit data to display</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Coach Page -->
+            <div id="ai-coach-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-robot"></i> AI Coach</h1>
+                    <p>Get personalized fitness guidance and recommendations</p>
+                </div>
+                
+                <div class="ai-coach-container">
+                    <!-- Coach Message -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-comments"></i> Your AI Coach</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="coach-message" class="coach-message">
+                                <div class="coach-avatar">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="message-content">
+                                    <p>Hello! I'm your AI fitness coach. I'll analyze your data and provide personalized recommendations to help you reach your goals.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Analysis -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-chart-line"></i> Performance Analysis</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="performance-analysis" class="analysis-content">
+                                <p class="empty-state">Complete your profile and log some workouts to get personalized analysis</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recommendations -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-lightbulb"></i> Recommendations</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="ai-recommendations" class="recommendations-list">
+                                <p class="empty-state">No recommendations available yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settings-page" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-cog"></i> Settings</h1>
+                    <p>Customize your fitness tracking experience</p>
+                </div>
+                
+                <div class="settings-container">
+                    <!-- Appearance -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-palette"></i> Appearance</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <label for="dark-mode-toggle">Dark Mode</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="dark-mode-toggle">
+                                    <label for="dark-mode-toggle" class="toggle-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Units -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-ruler"></i> Units</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <label for="unit-system">Unit System</label>
+                                <select id="unit-system">
+                                    <option value="metric">Metric (kg, cm)</option>
+                                    <option value="imperial">Imperial (lbs, in)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Management -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-database"></i> Data Management</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="setting-item">
+                                <button id="export-data-btn" class="btn-secondary">
+                                    <i class="fas fa-download"></i> Export Data
+                                </button>
+                            </div>
+                            <div class="setting-item">
+                                <button id="clear-data-btn" class="btn-danger">
+                                    <i class="fas fa-trash"></i> Clear All Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- JavaScript Files -->
+    <script src="js/exercise-database.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/workout.js"></script>
+    <script src="js/nutrition.js"></script>
+    <script src="js/hydration.js"></script>
+    <script src="js/pain-fatigue.js"></script>
+    <script src="js/scheduling.js"></script>
+    <script src="js/habits.js"></script>
+    <script src="js/ai-coach.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/charts.js"></script>
+</body>
+</html>

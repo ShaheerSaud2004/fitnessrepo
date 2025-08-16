@@ -1,0 +1,392 @@
+/* Dark Mode Styles */
+body.dark-mode {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #e1e5e9;
+}
+
+/* Dark Mode Authentication */
+body.dark-mode .auth-box {
+    background: #2d3748;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .auth-header h1 {
+    color: #667eea;
+}
+
+body.dark-mode .auth-header p {
+    color: #a0aec0;
+}
+
+body.dark-mode .auth-form h2 {
+    color: #e1e5e9;
+}
+
+body.dark-mode .form-group label {
+    color: #a0aec0;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group select,
+body.dark-mode .form-group textarea {
+    background: #4a5568;
+    border-color: #718096;
+    color: #e1e5e9;
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group select:focus,
+body.dark-mode .form-group textarea:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+body.dark-mode .auth-switch {
+    color: #a0aec0;
+}
+
+body.dark-mode .auth-switch a {
+    color: #667eea;
+}
+
+/* Dark Mode Sidebar */
+body.dark-mode .sidebar {
+    background: #2d3748;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .sidebar-header {
+    border-bottom-color: #4a5568;
+}
+
+body.dark-mode .sidebar-header h2 {
+    color: #667eea;
+}
+
+body.dark-mode .nav-item {
+    color: #a0aec0;
+}
+
+body.dark-mode .nav-item:hover {
+    background: #4a5568;
+    color: #667eea;
+}
+
+body.dark-mode .nav-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+body.dark-mode .sidebar-footer {
+    border-top-color: #4a5568;
+}
+
+/* Dark Mode Main Content */
+body.dark-mode .main-content {
+    background: #1a202c;
+}
+
+body.dark-mode .page-header h1 {
+    color: #e1e5e9;
+}
+
+body.dark-mode .page-header p {
+    color: #a0aec0;
+}
+
+/* Dark Mode Cards */
+body.dark-mode .card {
+    background: #2d3748;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .card-header {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    border-bottom-color: #4a5568;
+}
+
+body.dark-mode .card-header h3 {
+    color: #e1e5e9;
+}
+
+body.dark-mode .card-header i {
+    color: #667eea;
+}
+
+/* Dark Mode Stats */
+body.dark-mode .stat-item {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+/* Dark Mode Form Sections */
+body.dark-mode .form-section h3 {
+    color: #e1e5e9;
+    border-bottom-color: #4a5568;
+}
+
+body.dark-mode .form-section h3 i {
+    color: #667eea;
+}
+
+/* Dark Mode Workout Items */
+body.dark-mode .exercise-item {
+    background: #4a5568;
+    border-left-color: #667eea;
+}
+
+body.dark-mode .exercise-name {
+    color: #e1e5e9;
+}
+
+body.dark-mode .set-item {
+    background: #2d3748;
+    border-color: #4a5568;
+}
+
+body.dark-mode .set-number {
+    color: #667eea;
+}
+
+/* Dark Mode Nutrition */
+body.dark-mode .macro-item {
+    background: #4a5568;
+}
+
+body.dark-mode .macro-label {
+    color: #a0aec0;
+}
+
+body.dark-mode .macro-value {
+    color: #e1e5e9;
+}
+
+/* Dark Mode Hydration */
+body.dark-mode .hydration-amount {
+    color: #e1e5e9;
+}
+
+body.dark-mode .hydration-percentage {
+    color: #667eea;
+}
+
+/* Dark Mode Pain & Fatigue */
+body.dark-mode .slider {
+    background: #4a5568;
+}
+
+body.dark-mode .energy-labels,
+body.dark-mode .pain-labels {
+    color: #a0aec0;
+}
+
+/* Dark Mode Scheduling */
+body.dark-mode .event-item {
+    background: #4a5568;
+    border-left-color: #667eea;
+}
+
+body.dark-mode .event-title {
+    color: #e1e5e9;
+}
+
+body.dark-mode .event-datetime {
+    color: #a0aec0;
+}
+
+body.dark-mode .event-notes {
+    color: #a0aec0;
+}
+
+/* Dark Mode Habits */
+body.dark-mode .habit-item {
+    background: #4a5568;
+}
+
+body.dark-mode .habit-item.completed {
+    background: #22543d;
+    border-color: #48bb78;
+}
+
+body.dark-mode .habit-name {
+    color: #e1e5e9;
+}
+
+body.dark-mode .habit-date {
+    color: #a0aec0;
+}
+
+/* Dark Mode AI Coach */
+body.dark-mode .analysis-item,
+body.dark-mode .recommendation-item {
+    background: #4a5568;
+    border-left-color: #667eea;
+}
+
+body.dark-mode .analysis-title,
+body.dark-mode .recommendation-title {
+    color: #e1e5e9;
+}
+
+body.dark-mode .analysis-content,
+body.dark-mode .recommendation-content {
+    color: #a0aec0;
+}
+
+/* Dark Mode Settings */
+body.dark-mode .setting-item {
+    border-bottom-color: #4a5568;
+}
+
+body.dark-mode .setting-item label {
+    color: #e1e5e9;
+}
+
+/* Dark Mode Activity Items */
+body.dark-mode .activity-item {
+    background: #4a5568;
+    border-left-color: #667eea;
+}
+
+body.dark-mode .activity-title {
+    color: #e1e5e9;
+}
+
+body.dark-mode .activity-time {
+    color: #a0aec0;
+}
+
+/* Dark Mode History Items */
+body.dark-mode .history-item {
+    background: #4a5568;
+    border-left-color: #667eea;
+}
+
+body.dark-mode .history-title {
+    color: #e1e5e9;
+}
+
+body.dark-mode .history-date {
+    color: #a0aec0;
+}
+
+body.dark-mode .history-details {
+    color: #a0aec0;
+}
+
+/* Dark Mode Meal Items */
+body.dark-mode .meal-item {
+    background: #4a5568;
+    border-left-color: #28a745;
+}
+
+body.dark-mode .meal-name {
+    color: #e1e5e9;
+}
+
+body.dark-mode .meal-time {
+    color: #a0aec0;
+}
+
+body.dark-mode .macro-detail {
+    background: #2d3748;
+}
+
+body.dark-mode .macro-detail-label {
+    color: #a0aec0;
+}
+
+body.dark-mode .macro-detail-value {
+    color: #e1e5e9;
+}
+
+/* Dark Mode Empty States */
+body.dark-mode .empty-state {
+    color: #a0aec0;
+}
+
+/* Dark Mode Profile Check */
+body.dark-mode .profile-check {
+    background: #744210;
+    border-color: #d69e2e;
+    color: #faf089;
+}
+
+/* Dark Mode Notifications */
+body.dark-mode .notification {
+    background: #2d3748;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* Dark Mode Buttons */
+body.dark-mode .btn-secondary {
+    background: #4a5568;
+    color: #667eea;
+    border-color: #667eea;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background: #667eea;
+    color: white;
+}
+
+/* Dark Mode Toggle Switch */
+body.dark-mode .toggle-label {
+    background-color: #4a5568;
+}
+
+body.dark-mode input:checked + .toggle-label {
+    background-color: #667eea;
+}
+
+/* Dark Mode Range Slider */
+body.dark-mode .slider::-webkit-slider-thumb {
+    background: #667eea;
+}
+
+body.dark-mode .slider::-moz-range-thumb {
+    background: #667eea;
+}
+
+/* Dark Mode Select Dropdowns */
+body.dark-mode select {
+    background: #4a5568;
+    color: #e1e5e9;
+}
+
+body.dark-mode select option {
+    background: #4a5568;
+    color: #e1e5e9;
+}
+
+/* Dark Mode Scrollbars */
+body.dark-mode ::-webkit-scrollbar {
+    width: 8px;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+    background: #2d3748;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 4px;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #667eea;
+}
+
+/* Dark Mode Focus States */
+body.dark-mode *:focus {
+    outline-color: #667eea;
+}
+
+/* Dark Mode Transitions */
+body.dark-mode * {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
