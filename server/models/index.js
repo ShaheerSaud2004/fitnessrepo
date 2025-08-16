@@ -1,18 +1,16 @@
 const { Sequelize } = require('sequelize');
 const path = require('path');
 
-// Use different database files for test vs production
-const isTest = process.env.NODE_ENV === 'test';
-const dbPath = isTest 
-    ? path.join(__dirname, 'database', 'test-fitness.db')
-    : path.join(__dirname, 'database', 'fitness.db');
-
+// Create Sequelize instance with SQLite
 const sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: dbPath,
-    logging: isTest ? false : console.log, // Disable logging in tests
+    storage: process.env.NODE_ENV === 'test' 
+        ? path.join(__dirname, '../database/test.db')
+        : path.join(__dirname, '../database/fitness.db'),
+    logging: false, // Disable logging in production
     define: {
-        timestamps: true
+        timestamps: true, // Adds createdAt and updatedAt
+        underscored: true, // Use snake_case for column names
     }
 });
 
@@ -62,23 +60,8 @@ const initializeDatabase = async () => {
         await sequelize.authenticate();
         console.log('✅ Database connection established successfully.');
         
-        // For test environment, use force sync to ensure clean state
-        // For production, use alter sync to preserve data
-        const syncOptions = process.env.NODE_ENV === 'test' 
-            ? { force: true, logging: false } 
-            : { alter: true, logging: false };
-            
-        // Drop all tables first in test environment to avoid index conflicts
-        if (process.env.NODE_ENV === 'test') {
-            try {
-                await sequelize.drop();
-                console.log('✅ Existing tables dropped for clean test environment');
-            } catch (error) {
-                // Ignore errors if tables don't exist
-            }
-        }
-        
-        await sequelize.sync(syncOptions);
+        // Force sync all models with database (drops and recreates tables)
+        await sequelize.sync({ force: true });
         console.log('✅ Database models synchronized.');
         
         return true;

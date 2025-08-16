@@ -101,16 +101,19 @@ module.exports = (sequelize) => {
         tableName: 'nutrition',
         indexes: [
             {
-                fields: ['userId']
+                fields: ['user_id']
             },
             {
-                fields: ['userId', 'date']
+                fields: ['date']
             },
             {
                 fields: ['meal']
             },
             {
-                fields: ['foodName']
+                fields: ['user_id', 'date']
+            },
+            {
+                fields: ['food_name']
             }
         ]
     });

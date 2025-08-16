@@ -82,10 +82,13 @@ module.exports = (sequelize) => {
         tableName: 'pain_fatigue',
         indexes: [
             {
-                fields: ['userId']
+                fields: ['user_id']
             },
             {
-                fields: ['userId', 'date']
+                fields: ['date']
+            },
+            {
+                fields: ['user_id', 'date']
             }
         ]
     });

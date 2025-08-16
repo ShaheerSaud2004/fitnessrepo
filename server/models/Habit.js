@@ -74,10 +74,10 @@ module.exports = (sequelize) => {
         tableName: 'habits',
         indexes: [
             {
-                fields: ['userId']
+                fields: ['user_id']
             },
             {
-                fields: ['isActive']
+                fields: ['is_active']
             },
             {
                 fields: ['category']

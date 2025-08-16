@@ -97,8 +97,7 @@ module.exports = (sequelize) => {
         indexes: [
             {
                 unique: true,
-                fields: ['userId'],
-                name: 'settings_userId_unique'
+                fields: ['user_id']
             }
         ]
     });

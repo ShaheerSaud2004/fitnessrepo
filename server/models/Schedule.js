@@ -64,10 +64,16 @@ module.exports = (sequelize) => {
         tableName: 'schedule',
         indexes: [
             {
-                fields: ['userId']
+                fields: ['user_id']
             },
             {
-                fields: ['userId', 'date']
+                fields: ['date']
+            },
+            {
+                fields: ['type']
+            },
+            {
+                fields: ['user_id', 'date']
             }
         ]
     });

@@ -27,11 +27,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-i
 // Middleware
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
-        ? [
-            'https://fitness-tracker-uxwv1xaho-shaheers-projects-02efc33d.vercel.app',
-            'https://fitness-tracker-ten-sigma.vercel.app',
-            'https://*.vercel.app'
-          ] 
+        ? ['https://yourdomain.com'] 
         : ['http://localhost:3000', 'http://127.0.0.1:3000'],
     credentials: true
 }));
@@ -42,9 +38,15 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Initialize app.locals for data storage (accessible to routes)
+app.locals.users = new Map();
+app.locals.userData = new Map();
+
 // Middleware to make JWT_SECRET available to routes
 app.use((req, res, next) => {
     req.JWT_SECRET = JWT_SECRET;
+    req.users = app.locals.users;
+    req.userData = app.locals.userData;
     next();
 });
 

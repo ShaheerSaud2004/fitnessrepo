@@ -11,12 +11,7 @@
     "test:coverage": "jest --coverage",
     "test:integration": "jest --testPathPattern=integration",
     "test:unit": "jest --testPathPattern=unit",
-    "test:features": "node scripts/test-features.js",
-    "build": "echo 'No build step required for Node.js app'",
-    "deploy": "node scripts/deploy.js",
-    "deploy:railway": "node scripts/deploy-railway.js",
-    "deploy:vercel": "vercel --prod",
-    "deploy:netlify": "netlify deploy --prod"
+    "test:features": "node scripts/test-features.js"
   },
   "keywords": [
     "fitness",

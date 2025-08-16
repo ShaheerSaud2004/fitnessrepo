@@ -139,13 +139,20 @@ router.get('/stats', async (req, res) => {
 });
 
 // Get specific hydration entry
-router.get('/:id', async (req, res) => {
+router.get('/:id', (req, res) => {
     try {
         const userId = req.user.userId;
         const { id } = req.params;
 
-        const entry = await Hydration.findOne({ where: { id, userId } });
-        
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.hydration) {
+            return res.status(404).json({ 
+                error: 'Hydration entry not found',
+                details: 'The requested hydration entry could not be found'
+            });
+        }
+
+        const entry = userData.hydration.find(h => h.id === id);
         if (!entry) {
             return res.status(404).json({ 
                 error: 'Hydration entry not found',
@@ -165,26 +172,40 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update hydration entry
-router.put('/:id', async (req, res) => {
+router.put('/:id', (req, res) => {
     try {
         const userId = req.user.userId;
         const { id } = req.params;
         const updateData = req.body;
 
-        const entry = await Hydration.findOne({ where: { id, userId } });
-        
-        if (!entry) {
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.hydration) {
             return res.status(404).json({ 
                 error: 'Hydration entry not found',
                 details: 'The requested hydration entry could not be found'
             });
         }
 
-        await entry.update(updateData);
+        const entryIndex = userData.hydration.findIndex(h => h.id === id);
+        if (entryIndex === -1) {
+            return res.status(404).json({ 
+                error: 'Hydration entry not found',
+                details: 'The requested hydration entry could not be found'
+            });
+        }
+
+        // Update entry
+        userData.hydration[entryIndex] = {
+            ...userData.hydration[entryIndex],
+            ...updateData,
+            updatedAt: new Date().toISOString()
+        };
+
+        req.userData.set(userId, userData);
 
         res.json({
             message: 'Hydration entry updated successfully',
-            entry: entry.toJSON()
+            entry: userData.hydration[entryIndex]
         });
 
     } catch (error) {
@@ -197,21 +218,29 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete hydration entry
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', (req, res) => {
     try {
         const userId = req.user.userId;
         const { id } = req.params;
 
-        const entry = await Hydration.findOne({ where: { id, userId } });
-        
-        if (!entry) {
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.hydration) {
             return res.status(404).json({ 
                 error: 'Hydration entry not found',
                 details: 'The requested hydration entry could not be found'
             });
         }
 
-        await entry.destroy();
+        const entryIndex = userData.hydration.findIndex(h => h.id === id);
+        if (entryIndex === -1) {
+            return res.status(404).json({ 
+                error: 'Hydration entry not found',
+                details: 'The requested hydration entry could not be found'
+            });
+        }
+
+        userData.hydration.splice(entryIndex, 1);
+        req.userData.set(userId, userData);
 
         res.json({
             message: 'Hydration entry deleted successfully'

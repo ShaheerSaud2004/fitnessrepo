@@ -19,15 +19,6 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ 
-                error: 'Invalid email format',
-                details: 'Please provide a valid email address'
-            });
-        }
-
         if (password.length < 6) {
             return res.status(400).json({ 
                 error: 'Password too short',
@@ -89,15 +80,6 @@ router.post('/register', async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
-        
-        // Handle Sequelize validation errors
-        if (error.name === 'SequelizeValidationError') {
-            return res.status(400).json({ 
-                error: 'Validation error',
-                details: error.errors.map(e => e.message).join(', ')
-            });
-        }
-        
         res.status(500).json({ 
             error: 'Registration failed',
             details: 'An error occurred during registration'

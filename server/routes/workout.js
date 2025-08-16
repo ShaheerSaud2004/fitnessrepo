@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { Workout, Exercise } = require('../models');
 
 // Exercise database for AI workout generation
 const exerciseDatabase = {
@@ -58,10 +57,13 @@ const exerciseDatabase = {
 };
 
 // Generate AI workout
-router.post('/generate', async (req, res) => {
+router.post('/generate', (req, res) => {
     try {
         const userId = req.user.userId;
         const { fitnessGoals, experienceLevel, medicalHistory, workoutType, duration } = req.body;
+
+        const userData = req.userData.get(userId);
+        const profile = userData?.profile || {};
 
         // Determine workout focus based on goals
         let focusAreas = [];
@@ -83,16 +85,16 @@ router.post('/generate', async (req, res) => {
         }
 
         // Generate workout based on focus areas
-        const workoutData = {
-            userId,
+        const workout = {
+            id: Date.now().toString(),
             type: focusAreas[0] || 'strength', // Use the first focus area as the workout type
             duration: duration || '45-60 min',
+            exercises: [],
             difficulty: experienceLevel || 'beginner',
-            notes: ''
+            createdAt: new Date().toISOString()
         };
 
         // Add exercises based on focus areas
-        const exercises = [];
         if (focusAreas.includes('strength')) {
             // Select muscle groups to target
             const muscleGroups = ['chest', 'back', 'legs', 'shoulders', 'arms', 'core'];
@@ -117,7 +119,7 @@ router.post('/generate', async (req, res) => {
 
                 if (filteredExercises.length > 0) {
                     const selectedExercise = filteredExercises[Math.floor(Math.random() * filteredExercises.length)];
-                    exercises.push({
+                    workout.exercises.push({
                         ...selectedExercise,
                         muscleGroup: group,
                         completed: false
@@ -135,7 +137,7 @@ router.post('/generate', async (req, res) => {
 
             if (cardioExercises.length > 0) {
                 const selectedCardio = cardioExercises[Math.floor(Math.random() * cardioExercises.length)];
-                exercises.push({
+                workout.exercises.push({
                     ...selectedCardio,
                     muscleGroup: 'cardio',
                     completed: false
@@ -151,7 +153,7 @@ router.post('/generate', async (req, res) => {
 
             if (flexibilityExercises.length > 0) {
                 const selectedFlex = flexibilityExercises[Math.floor(Math.random() * flexibilityExercises.length)];
-                exercises.push({
+                workout.exercises.push({
                     ...selectedFlex,
                     muscleGroup: 'flexibility',
                     completed: false
@@ -160,16 +162,11 @@ router.post('/generate', async (req, res) => {
         }
 
         // Add workout tips and recommendations
-        workoutData.tips = generateWorkoutTips(workoutData, {}, medicalHistory);
+        workout.tips = generateWorkoutTips(workout, profile, medicalHistory);
 
         res.json({
             message: 'Workout generated successfully',
-            workout: {
-                id: Date.now().toString(),
-                ...workoutData,
-                exercises,
-                createdAt: new Date().toISOString()
-            }
+            workout
         });
 
     } catch (error) {
@@ -182,38 +179,35 @@ router.post('/generate', async (req, res) => {
 });
 
 // Get all workouts
-router.get('/', async (req, res) => {
+router.get('/', (req, res) => {
     try {
         const userId = req.user.userId;
         const { type, startDate, endDate } = req.query;
+        const userData = req.userData.get(userId);
 
-        let whereClause = { userId };
+        if (!userData) {
+            return res.json({ workouts: [] });
+        }
+
+        let workouts = userData.workouts || [];
         
+        // Filter by type
         if (type) {
-            whereClause.type = type;
+            workouts = workouts.filter(workout => workout.type === type);
         }
 
+        // Filter by date range
         if (startDate && endDate) {
-            whereClause.date = {
-                [require('sequelize').Op.between]: [startDate, endDate]
-            };
+            workouts = workouts.filter(workout => {
+                const workoutDate = workout.date.split('T')[0]; // Extract date part only
+                return workoutDate >= startDate && workoutDate <= endDate;
+            });
         }
+        
+        // Sort by date (newest first)
+        workouts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        const workouts = await Workout.findAll({
-            where: whereClause,
-            include: [{
-                model: Exercise,
-                as: 'exercises'
-            }],
-            order: [['date', 'DESC']]
-        });
-
-        res.json({ 
-            workouts: workouts.map(workout => ({
-                ...workout.toJSON(),
-                exercises: workout.exercises || []
-            }))
-        });
+        res.json({ workouts });
 
     } catch (error) {
         console.error('Get workouts error:', error);
@@ -225,17 +219,30 @@ router.get('/', async (req, res) => {
 });
 
 // Get workout statistics
-router.get('/stats', async (req, res) => {
+router.get('/stats', (req, res) => {
     try {
         const userId = req.user.userId;
+        const userData = req.userData.get(userId);
 
-        const workouts = await Workout.findAll({
-            where: { userId },
-            include: [{
-                model: Exercise,
-                as: 'exercises'
-            }]
-        });
+        if (!userData) {
+            return res.json({ 
+                stats: {
+                    totalWorkouts: 0,
+                    totalVolume: 0,
+                    averageWorkoutsPerWeek: 0,
+                    currentStreak: 0,
+                    longestStreak: 0,
+                    favoriteExercise: null,
+                    totalDuration: 0,
+                    workoutsThisWeek: 0,
+                    workoutsThisMonth: 0,
+                    workoutTypes: {},
+                    streak: 0
+                }
+            });
+        }
+
+        const workouts = userData.workouts || [];
         
         if (workouts.length === 0) {
             return res.json({
@@ -250,9 +257,7 @@ router.get('/stats', async (req, res) => {
                     workoutsThisWeek: 0,
                     workoutsThisMonth: 0,
                     workoutTypes: {},
-                    streak: 0,
-                    averageDuration: 0,
-                    favoriteType: null
+                    streak: 0
                 }
             });
         }
@@ -313,11 +318,7 @@ router.get('/stats', async (req, res) => {
             workoutsThisWeek,
             workoutsThisMonth,
             workoutTypes,
-            streak: currentStreak, // Add streak property for backward compatibility
-            averageDuration: totalWorkouts > 0 ? Math.round(totalDuration / totalWorkouts) : 0,
-            favoriteType: Object.keys(workoutTypes).length > 0 
-                ? Object.keys(workoutTypes).reduce((a, b) => workoutTypes[a] > workoutTypes[b] ? a : b)
-                : null
+            streak: currentStreak // Add streak property for backward compatibility
         };
 
         res.json({ stats });
@@ -332,19 +333,20 @@ router.get('/stats', async (req, res) => {
 });
 
 // Get specific workout
-router.get('/:id', async (req, res) => {
+router.get('/:id', (req, res) => {
     try {
         const userId = req.user.userId;
         const { id } = req.params;
 
-        const workout = await Workout.findOne({
-            where: { id, userId },
-            include: [{
-                model: Exercise,
-                as: 'exercises'
-            }]
-        });
+        const userData = req.userData.get(userId);
+        if (!userData || !userData.workouts) {
+            return res.status(404).json({ 
+                error: 'Workout not found',
+                details: 'The requested workout could not be found'
+            });
+        }
 
+        const workout = userData.workouts.find(w => w.id === id);
         if (!workout) {
             return res.status(404).json({ 
                 error: 'Workout not found',
@@ -352,7 +354,7 @@ router.get('/:id', async (req, res) => {
             });
         }
 
-        res.json({ workout: workout.toJSON() });
+        res.json({ workout });
 
     } catch (error) {
         console.error('Get workout error:', error);
@@ -364,7 +366,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Log a workout
-router.post('/', async (req, res) => {
+router.post('/', (req, res) => {
     try {
         const userId = req.user.userId;
         const { name, exercises, date, duration, notes, type } = req.body;
@@ -376,50 +378,54 @@ router.post('/', async (req, res) => {
             });
         }
 
-        const workoutData = {
-            userId,
+        let userData = req.userData.get(userId);
+        if (!userData) {
+            userData = {
+                profile: {},
+                workouts: [],
+                nutrition: [],
+                hydration: [],
+                painFatigue: [],
+                scheduling: [],
+                habits: [],
+                settings: {
+                    darkMode: false,
+                    units: 'metric',
+                    notifications: true
+                }
+            };
+        }
+
+        const workout = {
+            id: Date.now().toString(),
+            userId: userId,
             name: name ? name.trim() : `${type || 'Workout'} - ${new Date().toLocaleDateString()}`,
+            exercises: exercises.map(ex => ({
+                ...ex,
+                id: ex.id || Date.now().toString() + Math.random().toString(36).substr(2, 9)
+            })),
             date: date || new Date().toISOString(),
             duration: duration || '45 min',
             notes: notes || '',
             type: type || 'strength',
             difficulty: 'beginner', // Default difficulty
-            totalVolume: calculateWorkoutVolume(exercises),
-            exerciseCount: exercises.length
+            createdAt: new Date().toISOString()
         };
 
-        const workout = await Workout.create(workoutData);
+        // Calculate workout statistics
+        workout.totalVolume = calculateWorkoutVolume(workout.exercises);
+        workout.exerciseCount = workout.exercises.length;
 
-        // Create exercises for this workout
-        const exercisePromises = exercises.map(ex => 
-            Exercise.create({
-                workoutId: workout.id,
-                name: ex.name,
-                sets: ex.sets || 3,
-                reps: ex.reps || '10-12',
-                weight: ex.weight || 0,
-                duration: ex.duration || null,
-                rest: ex.rest || '60s',
-                muscleGroup: ex.muscleGroup || 'general',
-                difficulty: ex.difficulty || 'beginner',
-                completed: ex.completed || false,
-                notes: ex.notes || ''
-            })
-        );
+        userData.workouts.push(workout);
+        req.userData.set(userId, userData);
 
-        await Promise.all(exercisePromises);
-
-        // Get the workout with exercises
-        const workoutWithExercises = await Workout.findByPk(workout.id, {
-            include: [{
-                model: Exercise,
-                as: 'exercises'
-            }]
-        });
+        // Check for achievements
+        const achievements = checkWorkoutAchievements(userData.workouts);
 
         res.status(201).json({
             message: 'Workout created successfully',
-            workout: workoutWithExercises.toJSON()
+            workout,
+            achievements
         });
 
     } catch (error) {
@@ -432,21 +438,22 @@ router.post('/', async (req, res) => {
 });
 
 // Update a workout
-router.put('/:workoutId', async (req, res) => {
+router.put('/:workoutId', (req, res) => {
     try {
         const userId = req.user.userId;
         const { workoutId } = req.params;
-        const { name, exercises, date, duration, notes, type, difficulty } = req.body;
+        const { name, exercises, date, duration, notes, type } = req.body;
 
-        const workout = await Workout.findOne({ 
-            where: { id: workoutId, userId },
-            include: [{
-                model: Exercise,
-                as: 'exercises'
-            }]
-        });
+        const userData = req.userData.get(userId);
+        if (!userData) {
+            return res.status(404).json({ 
+                error: 'User data not found',
+                details: 'No workout data available'
+            });
+        }
 
-        if (!workout) {
+        const workoutIndex = userData.workouts.findIndex(w => w.id === workoutId);
+        if (workoutIndex === -1) {
             return res.status(404).json({ 
                 error: 'Workout not found',
                 details: 'The specified workout could not be found'
@@ -454,53 +461,26 @@ router.put('/:workoutId', async (req, res) => {
         }
 
         // Update workout
-        await workout.update({
-            name: name || workout.name,
-            date: date || workout.date,
-            duration: duration || workout.duration,
-            notes: notes !== undefined ? notes : workout.notes,
-            type: type || workout.type,
-            difficulty: difficulty || workout.difficulty,
-            totalVolume: exercises ? calculateWorkoutVolume(exercises) : workout.totalVolume,
-            exerciseCount: exercises ? exercises.length : workout.exerciseCount
-        });
+        userData.workouts[workoutIndex] = {
+            ...userData.workouts[workoutIndex],
+            name: name || userData.workouts[workoutIndex].name,
+            exercises: exercises || userData.workouts[workoutIndex].exercises,
+            date: date || userData.workouts[workoutIndex].date,
+            duration: duration || userData.workouts[workoutIndex].duration,
+            notes: notes !== undefined ? notes : userData.workouts[workoutIndex].notes,
+            type: type || userData.workouts[workoutIndex].type,
+            updatedAt: new Date().toISOString()
+        };
 
-        // Update exercises if provided
-        if (exercises) {
-            // Delete existing exercises
-            await Exercise.destroy({ where: { workoutId } });
-            
-            // Create new exercises
-            const exercisePromises = exercises.map(ex => 
-                Exercise.create({
-                    workoutId: workout.id,
-                    name: ex.name,
-                    sets: ex.sets || 3,
-                    reps: ex.reps || '10-12',
-                    weight: ex.weight || 0,
-                    duration: ex.duration || null,
-                    rest: ex.rest || '60s',
-                    muscleGroup: ex.muscleGroup || 'general',
-                    difficulty: ex.difficulty || 'beginner',
-                    completed: ex.completed || false,
-                    notes: ex.notes || ''
-                })
-            );
-            
-            await Promise.all(exercisePromises);
-        }
+        // Recalculate statistics
+        userData.workouts[workoutIndex].totalVolume = calculateWorkoutVolume(userData.workouts[workoutIndex].exercises);
+        userData.workouts[workoutIndex].exerciseCount = userData.workouts[workoutIndex].exercises.length;
 
-        // Get updated workout with exercises
-        const updatedWorkout = await Workout.findByPk(workout.id, {
-            include: [{
-                model: Exercise,
-                as: 'exercises'
-            }]
-        });
+        req.userData.set(userId, userData);
 
         res.json({
             message: 'Workout updated successfully',
-            workout: updatedWorkout.toJSON()
+            workout: userData.workouts[workoutIndex]
         });
 
     } catch (error) {
@@ -513,35 +493,33 @@ router.put('/:workoutId', async (req, res) => {
 });
 
 // Delete a workout
-router.delete('/:workoutId', async (req, res) => {
+router.delete('/:workoutId', (req, res) => {
     try {
         const userId = req.user.userId;
         const { workoutId } = req.params;
 
-        const workout = await Workout.findOne({ 
-            where: { id: workoutId, userId },
-            include: [{
-                model: Exercise,
-                as: 'exercises'
-            }]
-        });
+        const userData = req.userData.get(userId);
+        if (!userData) {
+            return res.status(404).json({ 
+                error: 'User data not found',
+                details: 'No workout data available'
+            });
+        }
 
-        if (!workout) {
+        const workoutIndex = userData.workouts.findIndex(w => w.id === workoutId);
+        if (workoutIndex === -1) {
             return res.status(404).json({ 
                 error: 'Workout not found',
                 details: 'The specified workout could not be found'
             });
         }
 
-        // Delete exercises first (due to foreign key constraint)
-        await Exercise.destroy({ where: { workoutId } });
-        
-        // Delete workout
-        await workout.destroy();
+        const deletedWorkout = userData.workouts.splice(workoutIndex, 1)[0];
+        req.userData.set(userId, userData);
 
         res.json({
             message: 'Workout deleted successfully',
-            deletedWorkout: workout.toJSON()
+            deletedWorkout
         });
 
     } catch (error) {

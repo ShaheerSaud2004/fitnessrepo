@@ -92,10 +92,10 @@ module.exports = (sequelize) => {
         tableName: 'exercises',
         indexes: [
             {
-                fields: ['workoutId']
+                fields: ['workout_id']
             },
             {
-                fields: ['muscleGroup']
+                fields: ['muscle_group']
             },
             {
                 fields: ['name']
